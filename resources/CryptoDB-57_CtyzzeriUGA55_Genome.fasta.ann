@@ -1,0 +1,23 @@
+9015713 11 11
+0 Ctyz_1 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=870632 | SO=chromosome
+0 870632 23
+0 Ctyz_2 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=993102 | SO=chromosome
+870632 993102 51
+0 Ctyz_3 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=1085325 | SO=chromosome
+1863734 1085325 35
+0 Ctyz_4 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=1108290 | SO=chromosome
+2949059 1108290 44
+0 Ctyz_5 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=919496 | SO=chromosome
+4057349 919496 46
+0 Ctyz_6 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=1294577 | SO=chromosome
+4976845 1294577 44
+0 Ctyz_7 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=1279255 | SO=chromosome
+6271422 1279255 35
+0 Ctyz_8 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=1314538 | SO=chromosome
+7550677 1314538 40
+0 Ctyz_00_1 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=7342 | SO=contig
+8865215 7342 1
+0 Ctyz_00_2 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=3517 | SO=contig
+8872557 3517 2
+0 Ctyz_00_3 | organism=Cryptosporidium_tyzzeri_isolate_UGA55 | version=2017-11-16 | length=139639 | SO=contig
+8876074 139639 0
