@@ -1,4 +1,4 @@
-## CRYPTOSPORIDIUM GENOME ANALYSIS PIPELINE (GAP):
+# CRYPTOSPORIDIUM GENOME ANALYSIS PIPELINE (GAP):
 
 Please ensure you have set up the following folders and subfolders for the analysis pipeline, simply run this line while you are in the gap main folder:
 
