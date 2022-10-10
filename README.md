@@ -1,5 +1,9 @@
 ## REPOSITORY STRUCTURE GAP (GENOME ANALYSIS PIPELINE):
 
+Please ensure you have set up the following folders and subfolders for the analysis pipeline, simply run this line while you are in the gap main folder:
+
+mkdir -p results/{bam,bamFixed,bamMarkDup,circos/{cov,variants},fasta,figures/{pca,stats},filteredReads,gvcf,gvcfCombined,pca,phylip,primerDesign/{alnFasta,effAt55C,figures,mergedFasta,primersList},qc/{qcBamMarkDup,qcFilteredReads},stats,vcf,vcfFiltered,vcfFilteredLists} 
+
 1. FASTQ: contains pre-processed fastq files (split files from downloaded sra files)
 2. RESOURCES: contains CtyzzeriUGA55 RefSeq files from CryptoDB and processed from these files (gbff, gtf, bed, dict, fasta)
 3. RESULTS: contains folders for different file types arising from processing steps (bam, cov, fasta, figures, gvcf, pca, phy, designed primers, qc, stats, vcf, ..)
