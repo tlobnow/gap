@@ -1,0 +1,2 @@
+"pair","forward_primer","reverse_primer","GeneID","Fwd_Eff","Rev_Eff","deltaEff","QualEff"
+5,"GGAGGAGGAGAAGGAGGA","GCAAACATCCTGAAATTCACTATATA","CTYZ_00002133",0.95,0.97,0.02,TRUE

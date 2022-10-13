@@ -2,7 +2,7 @@
 
 Please ensure you have set up the following folders and subfolders for the analysis pipeline, simply run this line while you are in the gap main folder:
 
-mkdir -p results/{bam,bamFixed,bamMarkDup,circos/{cov,variants},fasta,figures/{pca,stats},filteredReads,gvcf,gvcfCombined,pca,phylip,primerDesign/{alnFasta,effAt55C,figures,mergedFasta,primersList},qc/{qcBamMarkDup,qcFilteredReads},stats,vcf,vcfFiltered,vcfFilteredLists} 
+mkdir -p results/{bam,bamFixed,bamMarkDup,circos/{cov,variants},csv,fasta,figures/{pca,stats},filteredReads,gvcf,gvcfCombined,pca,phylip,primerDesign/{alnFasta,effAt55C,figures,mergedFasta,primersList,candidates,designLists,order},qc/{qcBamMarkDup,qcFilteredReads},stats,vcf,vcfFiltered,vcfFilteredLists} 
 
 1. FASTQ: contains pre-processed fastq files (split files from downloaded sra files)
 2. RESOURCES: contains CtyzzeriUGA55 RefSeq files from CryptoDB and processed from these files (gbff, gtf, bed, dict, fasta)
@@ -70,5 +70,21 @@ mkdir -p results/{bam,bamFixed,bamMarkDup,circos/{cov,variants},fasta,figures/{p
 - calculate coverage (bam files should be indexed (samtools index))
 
     **BED -> BED1K -> Variants -> Coverage**
+
+# CONTINUED: PRIMER DESIGN USING DECIPHER (R)
+
+Just as a quick heads up: The actual primer design was performed in R. The GAP-Processing was utilized as pre-work to facilitate the primer design in combination with multiple sequence alignment (MSA) in R.
+
+For the purpose of designing, three scripts were used to facilitate the design:
+
+### 02A_SignatureDesign_4LOOP.R ##########################################################################################################################################
+
+
+
+
+### 02B_VisualizeCandidatePairs.R ########################################################################################################################################
+
+
+
 
 
