@@ -1,0 +1,33 @@
+No.,Sample_ID,Species,Accession,"gp60
+subtype","gp60
+detail",Host,Isolate,Location,Region,Abbr_Reg,Latitude,Longitude,Kit,Year,publication
+1,EUR_T_866,C.tyzzeri,unpublished,IXb,IXb,Mus,AA_0866,Germany,Brandenburg,BR,52.9206,13.5558,Illumina,2022,unpublished
+2,EUR_T_900,C.tyzzeri,unpublished,IXb,IXb,Mus,AA_0900,Germany,Brandenburg,BR,52.6967,14.0833,Illumina,2022,unpublished
+3,EUR_T_942,C.tyzzeri,unpublished,IXb,IXb,Mus,AA_0942,Germany,Brandenburg,BR,52.9576,13.2839,Illumina,2022,unpublished
+4,USA_T_GA,C.tyzzeri,SRR5683558,IXb,IXb,Mus,UGA55,USA,Georgia,GA,33.98008578,-83.40055695,Illumina MiSeq,2019,"Sateriale et al., 2019"
+5,CHN_T_GU,C.tyzzeri,SRR16934713,IXa,IXaA6R2,Mus,TYGZ1,China,Guangdong,GU,23.36025099,113.3677406,Illumina HiSeq 2500,2021,"He et al., 2022"
+6,EUR_P_CZ1,C.parvum,SRR15694519,IIa,IIaA16G1R1,Cattle,Czech3,Czech Republic,Czech Republic,CZ,49.60718072,14.9993668,Illumina HiSeq 2500,2017,"Wang et al., 2022"
+7,EUR_P_CZ2,C.parvum,SRR15694518,IIa,IIaA16G1R1,Human,Czech5,Czech Republic,Czech Republic,CZ,49.60718072,14.9993668,Illumina HiSeq 2500,2017,"Wang et al., 2022"
+8,EUR_P_WL6,C.parvum,SRR6147945,IIa,IIaA15G2R1,Human,UKP6,United Kingdom,Wales,WL,51.47666816,-3.169396048,Illumina HiSeq 2500,2013,"Wang et al., 2022"
+9,CHN_P_GU1,C.parvum,SRR15694484,IId,IIdA19G1,Cattle,22973,China,Guangdong,GU,23.36025099,113.3677406,Illumina HiSeq 2500,2019,"Wang et al., 2022"
+10,CHN_P_GU2,C.parvum,SRR15694495,IId,IIdA19G1,Cattle,22972,China,Guangdong,GU,23.36025099,113.3677406,Illumina HiSeq 2500,2019,"Wang et al., 2022"
+11,CHN_P_GU3,C.parvum,SRR15694506,IId,IIdA19G1,Cattle,22971,China,Guangdong,GU,23.36025099,113.3677406,Illumina HiSeq 2500,2019,"Wang et al., 2022"
+12,CHN_P_SH2,C.parvum,SRR15694522,IId,IIdA19G1,Cattle,22600,China,Shanghai,SH,31.23930929,121.4726021,Illumina HiSeq 2500,2016,"Wang et al., 2022"
+13,USA_P_WI,C.parvum,SRR15694502,IIa,IIaA16G3R1,Cattle,NAMHS-861,USA,Wisconsin,WI,44.69938242,-89.58181518,Illumina HiSeq 2500,2015,"Wang et al., 2022"
+14,USA_H_ID,C.hominis,SRR1558150,Ib,IbA10G2,Human,37999,USA,Twin Falls,ID,42.59946287,-114.3553011,Illumina GAIIx,2015,"Guo et al., 2015"
+15,UGA_H_KA1,C.hominis,SRR1015747,Ib,IbA10G2,Human,TU502_2012,Uganda,Kampala,KA,0.3664982461,32.55550913,Illumina MiSeq,2004,"Ifeonu et al., 2016"
+16,UGA_H_KA2,C.hominis,SRR1015748,Ib,IbA10G2,Human,TU502_2012,Uganda,Kampala,KA,0.3664982461,32.55550913,Illumina MiSeq,2004,"Ifeonu et al., 2016"
+17,EUR_H_WL1,C.hominis,SRR1015721,Ib,IbA10G2,Human,UKH1,United Kingdom,Wales,WL,51.61055436,-3.985158047,Illumina MiSeq,2012,"Ifeonu et al., 2016"
+18,EUR_H_WL2,C.hominis,SRR1015722,Ib,IbA10G2,Human,UKH1,United Kingdom,Wales,WL,51.61055436,-3.985158047,Illumina MiSeq,2012,"Ifeonu et al., 2016"
+19,EUR_H_WL3,C.hominis,SRR6131684,Ib,IbA10G2,Human,UKH3,United Kingdom,Wales,WL,51.61055436,-3.985158047,Illumina MiSeq,2012,"Hadfield et al., 2015"
+20,AFR_H_GH1,C.hominis,SRR11843789,Id,IdA15,Human,C16-10151-GH,Ghana,Ghana,GH,6.675348774,-1.571441874,Illumina HiSeq 2500,2016,"Tichkule et al., 2021"
+21,AFR_H_GH2,C.hominis,SRR11843790,Ie,IeA11G3T3,Human,C16-10106-GH,Ghana,Ghana,GH,6.675348774,-1.571441874,Illumina HiSeq 2500,2016,"Tichkule et al., 2021"
+22,AFR_H_TZ1,C.hominis,SRR11843805,Ia,IaA19,Human,C16-10166-TZ,Tanzania,Tanzania,TZ,-6.502023667,39.28519775,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+23,AFR_H_TZ2,C.hominis,SRR11843798,Ib,IbA9G3,Human,C16-20196-TZ,Tanzania,Tanzania,TZ,-6.502023667,39.28519775,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+24,AFR_H_TZ3,C.hominis,SRR11843806,Id,IdA17,Human,C16-10114-TZ,Tanzania,Tanzania,TZ,-6.502023667,39.28519775,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+25,AFR_H_TZ4,C.hominis,SRR11843799,Ie,IeA11G3T3,Human,C16-10212-TZ,Tanzania,Tanzania,TZ,-6.502023667,39.28519775,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+26,MDG_H_1,C.hominis,SRR11843786,Ia,IaA14,Human,C16-20233-MG,Madagascar,Madagascar,MDG,-18.89956615,47.54648128,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+27,MDG_H_2,C.hominis,SRR11843787,Ia,IaA14,Human,C16-10062-MG,Madagascar,Madagascar,MDG,-18.89956615,47.54648128,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+28,MDG_H_3,C.hominis,SRR11843788,Ib,IbA10G2,Human,C16-10053-MG,Madagascar,Madagascar,MDG,-18.89956615,47.54648128,Illumina HiSeq 2500,2017,"Tichkule et al., 2021"
+29,NZL_H,C.hominis,SRR14089464,Ib,IbA10G2,Human,TKD,New Zealand,Auckland,AUC,-36.67517599,174.7001438,Illumina,2021,"Knox e al., 2021"
+30,IND_M,C.meleagridis,SRR1179185,IIIb,IIIb,Human,UKMEL1,India,India,IND,22.9524908,79.17079364,Illumina MiSeq,2013,"Arias-Agudelo et al., 2020"
