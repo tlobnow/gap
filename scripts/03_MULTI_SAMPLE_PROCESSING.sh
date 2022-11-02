@@ -31,16 +31,7 @@ LIST=/SAN/Ctyzzeri/gap/results/vcfFilteredLists/${IND}.filteredList.vcf
 FVCF=/SAN/Ctyzzeri/gap/results/vcfFiltered/${IND}.filtered.vcf
 STATS=/SAN/Ctyzzeri/gap/results/stats/${IND}
 FSTATS=/SAN/Ctyzzeri/gap/results/stats/${IND}.filtered
-
-#PRUNED=/SAN/Ctyzzeri/gap/results/pca/${IND}
-PRUNED2=/SAN/Ctyzzeri/gap/results/pca2/${IND}
-#EXTRACT=/SAN/Ctyzzeri/gap/results/pca/${IND}.prune.in
-EXTRACT2=/SAN/Ctyzzeri/gap/results/pca2/${IND}.prune.in
-#PCA=/SAN/Ctyzzeri/gap/results/pca/${IND}
-PCA=/SAN/Ctyzzeri/gap/results/pca2/${IND}
-
 PHY=/SAN/Ctyzzeri/gap/results/phylip
-LD=/SAN/Ctyzzeri/gap/results/ld/${IND}
 
 # COMBINE GVCF ###################################################################################################################
 echo "Combine GVCF of $IND"
