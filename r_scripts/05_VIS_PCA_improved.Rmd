@@ -1,0 +1,1232 @@
+---
+title: "pcaPublish2"
+author: "Finn"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r libraries, echo=F, warning=F, message=F}
+library(tidyverse)
+library(knitr)
+```
+
+## Calculate Linkage Disequilibrium for PCA
+
+``` {r linkage-plot, echo=F, warning=F, message=F}
+
+plotLD <- function(FILE, BIN.LOCATION) {
+  # set the path
+  my_bins <- paste0(BIN.LOCATION, FILE,".ld_decay_bins")
+  # read in data
+  ld_bins <- read_tsv(my_bins)
+  meanR2 <- round(mean(ld_bins$avg_R2), 1)
+  # plot LD decay
+  ggplot(ld_bins, aes(distance, avg_R2)) + geom_line() + 
+    xlab("Distance (bp)") + ylab(expression(italic(r)^2)) +
+    #stat_regline_equation(label.x = 200000, label.y=0.9)
+    annotate("text", x=500000, y=1, 
+             label= (paste0("mean r2 = ",meanR2))) +
+    ggtitle(paste0("LD Decay of sample ", FILE))
+}
+
+plotLD("4T_1M", "/SAN/Ctyzzeri/gap/results/ld/")
+plotLD("4T_8P_1M", "/SAN/Ctyzzeri/gap/results/ld/")
+plotLD("4T_8P_16H_1M", "/SAN/Ctyzzeri/gap/results/ld/")
+
+```
+# 4T_1M
+``` {r prep1, echo=F,warning=F,message=F}
+FILE <- "4T_1M"
+LD=0.4
+#LD="calculated"
+# PREPARE A FILE THAT CONTAINS _C.tyzzeri_ SAMPLES AND OUTGROUP(S)
+
+if (LD==0.4) {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenval"))
+} else {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenval"))
+}
+
+pca <- pca[,-1] # eliminate the duplicated first row
+names(pca)[1] <- "ind" # rename the frist column
+names(pca)[2:ncol(pca)] <- paste0("PC", 1:(ncol(pca)-1))
+
+# make a vector of sample names
+sample <- rep(NA, length(pca$ind))
+sample[grep("866",       pca$ind)] <- "866.sdgr"
+sample[grep("942",       pca$ind)] <- "942.sdgr"
+sample[grep("CHN_T_GU",  pca$ind)] <- "CHN_T_GU"
+sample[grep("USA_T_GA",  pca$ind)] <- "USA_T_GA"
+sample[grep("IND_M",     pca$ind)] <- "IND_M"
+
+
+# make a vector of sample locations
+loc <- rep(NA, length(pca$ind))
+loc[grep("866",       pca$ind)] <- "GER"
+loc[grep("942",       pca$ind)] <- "GER"
+loc[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+loc[grep("USA_T_GA",  pca$ind)] <- "USA"
+loc[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector of sample regions
+reg <- rep(NA, length(pca$ind))
+reg[grep("866",       pca$ind)] <- "EUR"
+reg[grep("942",       pca$ind)] <- "EUR"
+reg[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+reg[grep("USA_T_GA",  pca$ind)] <- "USA"
+reg[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector with sample hosts
+host <- rep(NA, length(pca$ind))
+host[grep("866",       pca$ind)] <- "Mmd"
+host[grep("942",       pca$ind)] <- "Mmd"
+host[grep("CHN_T_GU",  pca$ind)] <- "Mmm"
+host[grep("USA_T_GA",  pca$ind)] <- "Mmd"
+host[grep("IND_M",     pca$ind)] <- "Human"
+
+
+# make a vector with sample species
+spp <- rep(NA, length(pca$ind))
+spp[grep("866",       pca$ind)] <- "C.tyzzeri"
+spp[grep("942",       pca$ind)] <- "C.tyzzeri"
+spp[grep("CHN_T_GU",  pca$ind)] <- "C.tyzzeri"
+spp[grep("USA_T_GA",  pca$ind)] <- "C.tyzzeri"
+spp[grep("IND_M",     pca$ind)] <- "C.meleagridis"
+
+
+# make a vector with sample subspecies
+ssp <- rep(NA, length(pca$ind))
+ssp[grep("866",       pca$ind)] <- "IXb"
+ssp[grep("942",       pca$ind)] <- "IXb"
+ssp[grep("CHN_T_GU",  pca$ind)] <- "IXa"
+ssp[grep("USA_T_GA",  pca$ind)] <- "IXb"
+ssp[grep("IND_M",     pca$ind)] <- "IIIb"
+
+
+# bind the vectors together
+pca_prep <- as_tibble(data.frame(pca, sample, loc, reg, host, spp, ssp))
+
+# prepare data for "principal variance explained" (pve)
+if (length(pca_prep$ind) > 20) {
+  pve_prep <- data.frame(PC = 1:20, pve = eigenval/sum(eigenval)*100)
+} else {
+  pve_prep <- data.frame(PC = 1:length(pca_prep$ind), pve = eigenval/sum(eigenval)*100)
+}
+cumsum(pve_prep$pve)
+
+pca <- pca_prep
+pve <- pve_prep
+
+VAR_EXPLAINED_smol <- pve %>% ggplot(aes(PC, pve)) + ggtitle(paste0("Variance explained per PC (", FILE, ")")) + geom_bar(stat = "identity") + ylab("Percentage variance explained") + theme_light()
+
+SPECIES_smol <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = spp, 
+                                         # shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = species") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("#73be73","red", "blue", "orange")) +
+  scale_color_manual(values = c("red","blue", "orange")) +
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+
+SUBSPECIES_smol <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = ssp, 
+                                         # shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = subspecies") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c(#"#425F57", "#749F82", "#A8E890","#CFFF8D", 
+                                #"blue", "#31C6D4",  
+                                "red","#CDCD00", "orange")) + 
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+SUBSPECIES_PC23_smol <- pca %>% ggplot(aes((signif(pve$pve[2], 3)*PC2), 
+                                         (signif(pve$pve[3], 3))*PC3, 
+                                         col = ssp, 
+                                         # shape = host, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC2 vs. PC3 (", FILE, ")"), 
+          subtitle = "color = subspecies") + #, shape = host") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("red","#ffd966ff", "orange")) + 
+                                # parvum ssp          # tyzzeri ssp
+  xlab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  ylab(paste0("PC3 (", signif(pve$pve[3], 3), "%)")) + 
+  theme(legend.position = "right")
+
+# VAR_EXPLAINED_smol
+# SPECIES_smol
+# SUBSPECIES_smol
+# SUBSPECIES_PC23_smol
+
+```
+
+``` {r prep2, echo=F,warning=F,message=F}
+################################################################################
+# PRINCIPAL COMPONENT ANALYSIS SCRIPT ##########################################
+################################################################################
+
+FILE <- "4T_8P_1M"
+LD=0.4
+#LD="calculated"
+# PREPARE A FILE THAT CONTAINS _C.tyzzeri_ SAMPLES AND OUTGROUP(S)
+
+if (LD==0.4) {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenval"))
+} else {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenval"))
+}
+
+pca <- pca[,-1] # eliminate the duplicated first row
+names(pca)[1] <- "ind" # rename the frist column
+names(pca)[2:ncol(pca)] <- paste0("PC", 1:(ncol(pca)-1))
+
+# make a vector of sample names
+sample <- rep(NA, length(pca$ind))
+sample[grep("866",       pca$ind)] <- "866.sdgr"
+sample[grep("942",       pca$ind)] <- "942.sdgr"
+sample[grep("CHN_P_GU1", pca$ind)] <- "CHN_P_GU1"
+sample[grep("CHN_P_GU2", pca$ind)] <- "CHN_P_GU2"
+sample[grep("CHN_P_GU3", pca$ind)] <- "CHN_P_GU3"
+sample[grep("CHN_P_SH1", pca$ind)] <- "CHN_P_SH1"
+sample[grep("CHN_P_SH2", pca$ind)] <- "CHN_P_SH2"
+sample[grep("CHN_T_GU",  pca$ind)] <- "CHN_T_GU"
+sample[grep("EUR_P_WL6", pca$ind)] <- "EUR_P_WL6"
+sample[grep("EUR_T_866", pca$ind)] <- "EUR_T_866"
+sample[grep("EUR_T_942", pca$ind)] <- "EUR_T_942"
+sample[grep("EUR_T_900", pca$ind)] <- "EUR_T_900"
+sample[grep("EUR_P_CZ1", pca$ind)] <- "EUR_P_CZ1"
+sample[grep("EUR_P_CZ2", pca$ind)] <- "EUR_P_CZ2"
+sample[grep("EUR_P_FR",  pca$ind)] <- "EUR_P_FR"
+sample[grep("USA_P_AL1", pca$ind)] <- "USA_P_AL1"
+sample[grep("USA_P_AL2", pca$ind)] <- "USA_P_AL2"
+sample[grep("USA_P_OR",  pca$ind)] <- "USA_P_OR"
+sample[grep("USA_P_WI",  pca$ind)] <- "USA_P_WI"
+sample[grep("USA_P_WA1", pca$ind)] <- "USA_P_WA1"
+sample[grep("USA_P_WA2", pca$ind)] <- "USA_P_WA2"
+sample[grep("USA_T_GA",  pca$ind)] <- "USA_T_GA"
+sample[grep("IND_M",     pca$ind)] <- "IND_M"
+
+
+# make a vector of sample locations
+loc <- rep(NA, length(pca$ind))
+loc[grep("866",       pca$ind)] <- "GER"
+loc[grep("942",       pca$ind)] <- "GER"
+loc[grep("EUR_T_866", pca$ind)] <- "GER"
+loc[grep("EUR_T_942", pca$ind)] <- "GER"
+loc[grep("EUR_T_900", pca$ind)] <- "GER"
+loc[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+loc[grep("USA_T_GA",  pca$ind)] <- "USA"
+loc[grep("EUR_P_CZ1", pca$ind)] <- "CZE"
+loc[grep("EUR_P_CZ2", pca$ind)] <- "CZE"
+loc[grep("EUR_P_FR",  pca$ind)] <- "FRA"
+loc[grep("USA_P_OR",  pca$ind)] <- "USA"
+loc[grep("USA_P_AL1", pca$ind)] <- "USA"
+loc[grep("USA_P_AL2", pca$ind)] <- "USA"
+loc[grep("CHN_P_GU1", pca$ind)] <- "CHN"
+loc[grep("CHN_P_GU2", pca$ind)] <- "CHN"
+loc[grep("CHN_P_GU3", pca$ind)] <- "CHN"
+loc[grep("CHN_P_SH1", pca$ind)] <- "CHN"
+loc[grep("CHN_P_SH2", pca$ind)] <- "CHN"
+loc[grep("USA_P_WI",  pca$ind)] <- "USA"
+loc[grep("USA_P_WA1", pca$ind)] <- "USA"
+loc[grep("USA_P_WA2", pca$ind)] <- "USA"
+loc[grep("EUR_P_WL6", pca$ind)] <- "WAL"
+loc[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector of sample regions
+reg <- rep(NA, length(pca$ind))
+reg[grep("866",       pca$ind)] <- "EUR"
+reg[grep("942",       pca$ind)] <- "EUR"
+reg[grep("EUR_T_866", pca$ind)] <- "EUR"
+reg[grep("EUR_T_942", pca$ind)] <- "EUR"
+reg[grep("EUR_T_900", pca$ind)] <- "EUR"
+reg[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+reg[grep("USA_T_GA",  pca$ind)] <- "USA"
+reg[grep("EUR_P_CZ1", pca$ind)] <- "EUR"
+reg[grep("EUR_P_CZ2", pca$ind)] <- "EUR"
+reg[grep("EUR_P_FR",  pca$ind)] <- "EUR"
+reg[grep("USA_P_OR",  pca$ind)] <- "USA"
+reg[grep("USA_P_AL1", pca$ind)] <- "USA"
+reg[grep("USA_P_AL2", pca$ind)] <- "USA"
+reg[grep("CHN_P_GU1", pca$ind)] <- "CHN"
+reg[grep("CHN_P_GU2", pca$ind)] <- "CHN"
+reg[grep("CHN_P_GU3", pca$ind)] <- "CHN"
+reg[grep("CHN_P_SH1", pca$ind)] <- "CHN"
+reg[grep("CHN_P_SH2", pca$ind)] <- "CHN"
+reg[grep("USA_P_WI",  pca$ind)] <- "USA"
+reg[grep("USA_P_WA1", pca$ind)] <- "USA"
+reg[grep("USA_P_WA2", pca$ind)] <- "USA"
+reg[grep("EUR_P_WL6", pca$ind)] <- "EUR"
+reg[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector with sample hosts
+host <- rep(NA, length(pca$ind))
+host[grep("866",       pca$ind)] <- "Mmd"
+host[grep("942",       pca$ind)] <- "Mmd"
+host[grep("EUR_T_866", pca$ind)] <- "Mmd"
+host[grep("EUR_T_942", pca$ind)] <- "Mmd"
+host[grep("EUR_T_900", pca$ind)] <- "Mmm"
+host[grep("CHN_T_GU",  pca$ind)] <- "Mmm"
+host[grep("USA_T_GA",  pca$ind)] <- "Mmd"
+host[grep("EUR_P_CZ2", pca$ind)] <- "Human"
+host[grep("EUR_P_FR",  pca$ind)] <- "Human"
+host[grep("USA_P_OR",  pca$ind)] <- "Human"
+host[grep("USA_P_AL1", pca$ind)] <- "Human"
+host[grep("USA_P_AL2", pca$ind)] <- "Human"
+host[grep("EUR_P_WL6", pca$ind)] <- "Human"
+host[grep("EUR_P_CZ1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU2", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU3", pca$ind)] <- "Cattle"
+host[grep("CHN_P_SH1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_SH2", pca$ind)] <- "Cattle"
+host[grep("USA_P_WI",  pca$ind)] <- "Cattle"
+host[grep("USA_P_WA1", pca$ind)] <- "Cattle"
+host[grep("USA_P_WA2", pca$ind)] <- "Cattle"
+host[grep("IND_M",     pca$ind)] <- "Human"
+
+
+# make a vector with sample species
+spp <- rep(NA, length(pca$ind))
+spp[grep("866",       pca$ind)] <- "C.tyzzeri"
+spp[grep("942",       pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_866", pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_942", pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_900", pca$ind)] <- "C.tyzzeri"
+spp[grep("CHN_T_GU",  pca$ind)] <- "C.tyzzeri"
+spp[grep("USA_T_GA",  pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_P_CZ2", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_OR",  pca$ind)] <- "C.parvum"
+spp[grep("USA_P_AL1", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_AL2", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_CZ1", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_FR",  pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU1", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU2", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU3", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_SH1", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_SH2", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WI",  pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WA1", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WA2", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_WL6", pca$ind)] <- "C.parvum"
+spp[grep("IND_M",     pca$ind)] <- "C.meleagridis"
+
+
+# make a vector with sample subspecies
+ssp <- rep(NA, length(pca$ind))
+ssp[grep("866",       pca$ind)] <- "IXb"
+ssp[grep("942",       pca$ind)] <- "IXb"
+ssp[grep("EUR_T_866", pca$ind)] <- "IXb"
+ssp[grep("EUR_T_942", pca$ind)] <- "IXb"
+ssp[grep("EUR_T_900", pca$ind)] <- "IXb"
+ssp[grep("CHN_T_GU",  pca$ind)] <- "IXa"
+ssp[grep("USA_T_GA",  pca$ind)] <- "IXb"
+ssp[grep("EUR_P_CZ1", pca$ind)] <- "IIa"
+ssp[grep("USA_P_OR",  pca$ind)] <- "IIc"
+ssp[grep("USA_P_AL1", pca$ind)] <- "IIc"
+ssp[grep("USA_P_AL2", pca$ind)] <- "IId"
+ssp[grep("EUR_P_CZ2", pca$ind)] <- "IIa"
+ssp[grep("EUR_P_FR",  pca$ind)] <- "II"
+ssp[grep("CHN_P_GU1", pca$ind)] <- "IId"
+ssp[grep("CHN_P_GU2", pca$ind)] <- "IId"
+ssp[grep("CHN_P_GU3", pca$ind)] <- "IId"
+ssp[grep("CHN_P_SH1", pca$ind)] <- "IId"
+ssp[grep("CHN_P_SH2", pca$ind)] <- "IId"
+ssp[grep("USA_P_WI",  pca$ind)] <- "IIa"
+ssp[grep("USA_P_WA1", pca$ind)] <- "IIa"
+ssp[grep("USA_P_WA2", pca$ind)] <- "IIa"
+ssp[grep("EUR_P_WL6", pca$ind)] <- "IIa"
+ssp[grep("IND_M",     pca$ind)] <- "IIIb"
+
+# bind the vectors together
+pca_prep <- as_tibble(data.frame(pca, sample, loc, reg, host, spp, ssp))
+
+# prepare data for "principal variance explained" (pve)
+if (length(pca_prep$ind) > 20) {
+  pve_prep <- data.frame(PC = 1:20, pve = eigenval/sum(eigenval)*100)
+} else {
+  pve_prep <- data.frame(PC = 1:length(pca_prep$ind), pve = eigenval/sum(eigenval)*100)
+}
+cumsum(pve_prep$pve)
+
+pca <- pca_prep
+pve <- pve_prep
+
+VAR_EXPLAINED_med <- pve %>% ggplot(aes(PC, pve)) + ggtitle(paste0("Variance explained per PC (", FILE, ")")) + geom_bar(stat = "identity") + ylab("Percentage variance explained") + theme_light() #PCsVarExp
+
+
+SPECIES_med <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = spp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = species") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("red","blue", "orange")) +
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+SUBSPECIES_med <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = ssp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = subspecies") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("blue","#31C6D4", "red","#ffd966ff", "orange")) + 
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+SPECIES_PC23_med <- pca %>% ggplot(aes((signif(pve$pve[2], 3)*PC2), 
+                                         (signif(pve$pve[3], 3))*PC3, 
+                                         col = spp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC2 vs. PC3 (", FILE, ")"), 
+          subtitle = "color = species") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  geom_label() +
+  scale_color_manual(values = c("red","blue", "orange")) +
+  xlab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  ylab(paste0("PC3 (", signif(pve$pve[3], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+SUBSPECIES_PC23_med <- pca %>% ggplot(aes((signif(pve$pve[2], 3)*PC2), 
+                                         (signif(pve$pve[3], 3))*PC3, 
+                                         col = ssp, 
+                                         #shape = host, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC2 vs. PC3 (", FILE, ")"), 
+          subtitle = "color = subspecies") + #, shape = host") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("blue","#31C6D4", "red","#ffd966ff", "orange")) + 
+                                # parvum ssp          # tyzzeri ssp
+  xlab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  ylab(paste0("PC3 (", signif(pve$pve[3], 3), "%)")) + 
+  theme(legend.position = "right")
+
+# VAR_EXPLAINED_med
+# SPECIES_med
+# SUBSPECIES_med
+# SPECIES_PC23_med
+# SUBSPECIES_PC23_med
+
+```
+
+# 4T_8P_16H_1M
+
+``` {r prep3, echo=F,warning=F,message=F}
+FILE <- "4T_8P_16H_1M"
+
+LD=0.4
+#LD="calculated"
+# PREPARE A FILE THAT CONTAINS _C.tyzzeri_ SAMPLES AND OUTGROUP(S)
+
+if (LD==0.4) {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenval"))
+} else {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenval"))
+}
+
+pca <- pca[,-1] # eliminate the duplicated first row
+names(pca)[1] <- "ind" # rename the frist column
+names(pca)[2:ncol(pca)] <- paste0("PC", 1:(ncol(pca)-1))
+
+# make a vector of sample names
+sample <- rep(NA, length(pca$ind))
+sample[grep("866",       pca$ind)] <- "866.sdgr"
+sample[grep("942",       pca$ind)] <- "942.sdgr"
+sample[grep("AFR_H_GH1", pca$ind)] <- "AFR_H_GH1"
+sample[grep("AFR_H_GH2", pca$ind)] <- "AFR_H_GH2"
+sample[grep("AFR_H_GH3", pca$ind)] <- "AFR_H_GH3"
+sample[grep("AFR_H_TZ1", pca$ind)] <- "AFR_H_TZ1"
+sample[grep("AFR_H_TZ2", pca$ind)] <- "AFR_H_TZ2"
+sample[grep("AFR_H_TZ3", pca$ind)] <- "AFR_H_TZ3"
+sample[grep("AFR_H_TZ4", pca$ind)] <- "AFR_H_TZ4"
+sample[grep("CHN_P_GU1", pca$ind)] <- "CHN_P_GU1"
+sample[grep("CHN_P_GU2", pca$ind)] <- "CHN_P_GU2"
+sample[grep("CHN_P_GU3", pca$ind)] <- "CHN_P_GU3"
+sample[grep("CHN_P_SH1", pca$ind)] <- "CHN_P_SH1"
+sample[grep("CHN_P_SH2", pca$ind)] <- "CHN_P_SH2"
+sample[grep("CHN_T_GU",  pca$ind)] <- "CHN_T_GU"
+sample[grep("COL_H_MD",  pca$ind)] <- "COL_H_MD"
+sample[grep("EUR_H_WL1", pca$ind)] <- "EUR_H_WL1"
+sample[grep("EUR_H_WL2", pca$ind)] <- "EUR_H_WL2"
+sample[grep("EUR_H_WL3", pca$ind)] <- "EUR_H_WL3"
+sample[grep("EUR_H_WL4", pca$ind)] <- "EUR_H_WL4"
+sample[grep("EUR_H_WL5", pca$ind)] <- "EUR_H_WL5"
+sample[grep("EUR_P_WL6", pca$ind)] <- "EUR_P_WL6"
+sample[grep("EUR_T_866", pca$ind)] <- "EUR_T_866"
+sample[grep("EUR_T_942", pca$ind)] <- "EUR_T_942"
+sample[grep("EUR_T_900", pca$ind)] <- "EUR_T_900"
+sample[grep("EUR_P_CZ1", pca$ind)] <- "EUR_P_CZ1"
+sample[grep("EUR_P_CZ2", pca$ind)] <- "EUR_P_CZ2"
+sample[grep("EUR_P_FR",  pca$ind)] <- "EUR_P_FR"
+sample[grep("MDG_H_1",   pca$ind)] <- "MDG_H_1"
+sample[grep("MDG_H_2",   pca$ind)] <- "MDG_H_2"
+sample[grep("MDG_H_3",   pca$ind)] <- "MDG_H_3"
+sample[grep("NZL_H",     pca$ind)] <- "NZL_H"
+sample[grep("USA_H_MO",  pca$ind)] <- "USA_H_MO"
+sample[grep("USA_H_ID",  pca$ind)] <- "USA_H_ID"
+sample[grep("UGA_H_KA1", pca$ind)] <- "UGA_H_KA1"
+sample[grep("UGA_H_KA2", pca$ind)] <- "UGA_H_KA2"
+sample[grep("USA_P_AL1", pca$ind)] <- "USA_P_AL1"
+sample[grep("USA_P_AL2", pca$ind)] <- "USA_P_AL2"
+sample[grep("USA_P_OR",  pca$ind)] <- "USA_P_OR"
+sample[grep("USA_P_WI",  pca$ind)] <- "USA_P_WI"
+sample[grep("USA_P_WA1", pca$ind)] <- "USA_P_WA1"
+sample[grep("USA_P_WA2", pca$ind)] <- "USA_P_WA2"
+sample[grep("USA_T_GA",  pca$ind)] <- "USA_T_GA"
+sample[grep("IND_M",     pca$ind)] <- "IND_M"
+
+
+# make a vector of sample locations
+loc <- rep(NA, length(pca$ind))
+loc[grep("866",       pca$ind)] <- "GER"
+loc[grep("942",       pca$ind)] <- "GER"
+loc[grep("EUR_T_866", pca$ind)] <- "GER"
+loc[grep("EUR_T_942", pca$ind)] <- "GER"
+loc[grep("EUR_T_900", pca$ind)] <- "GER"
+loc[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+loc[grep("USA_T_GA",  pca$ind)] <- "USA"
+loc[grep("EUR_P_CZ1", pca$ind)] <- "CZE"
+loc[grep("EUR_P_CZ2", pca$ind)] <- "CZE"
+loc[grep("EUR_P_FR",  pca$ind)] <- "FRA"
+loc[grep("USA_P_OR",  pca$ind)] <- "USA"
+loc[grep("USA_P_AL1", pca$ind)] <- "USA"
+loc[grep("USA_P_AL2", pca$ind)] <- "USA"
+loc[grep("CHN_P_GU1", pca$ind)] <- "CHN"
+loc[grep("CHN_P_GU2", pca$ind)] <- "CHN"
+loc[grep("CHN_P_GU3", pca$ind)] <- "CHN"
+loc[grep("CHN_P_SH1", pca$ind)] <- "CHN"
+loc[grep("CHN_P_SH2", pca$ind)] <- "CHN"
+loc[grep("USA_P_WI",  pca$ind)] <- "USA"
+loc[grep("USA_P_WA1", pca$ind)] <- "USA"
+loc[grep("USA_P_WA2", pca$ind)] <- "USA"
+loc[grep("COL_H_MD",  pca$ind)] <- "COL"
+loc[grep("USA_H_MO",  pca$ind)] <- "USA"
+loc[grep("USA_H_ID",  pca$ind)] <- "USA"
+loc[grep("UGA_H_KA1", pca$ind)] <- "UGA"
+loc[grep("UGA_H_KA2", pca$ind)] <- "UGA"
+loc[grep("EUR_H_WL1", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL2", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL3", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL4", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL5", pca$ind)] <- "WAL"
+loc[grep("EUR_P_WL6", pca$ind)] <- "WAL"
+loc[grep("AFR_H_GH1", pca$ind)] <- "GHA"
+loc[grep("AFR_H_GH2", pca$ind)] <- "GHA"
+loc[grep("AFR_H_GH3", pca$ind)] <- "GHA"
+loc[grep("AFR_H_TZ1", pca$ind)] <- "TZN"
+loc[grep("AFR_H_TZ2", pca$ind)] <- "TZN"
+loc[grep("AFR_H_TZ3", pca$ind)] <- "TZN"
+loc[grep("AFR_H_TZ4", pca$ind)] <- "TZN"
+loc[grep("MDG_H_1",   pca$ind)] <- "MDG"
+loc[grep("MDG_H_2",   pca$ind)] <- "MDG"
+loc[grep("MDG_H_3",   pca$ind)] <- "MDG"
+loc[grep("NZL_H",     pca$ind)] <- "NZL"
+loc[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector of sample regions
+reg <- rep(NA, length(pca$ind))
+reg[grep("866",       pca$ind)] <- "EUR"
+reg[grep("942",       pca$ind)] <- "EUR"
+reg[grep("EUR_T_866", pca$ind)] <- "EUR"
+reg[grep("EUR_T_942", pca$ind)] <- "EUR"
+reg[grep("EUR_T_900", pca$ind)] <- "EUR"
+reg[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+reg[grep("USA_T_GA",  pca$ind)] <- "USA"
+reg[grep("EUR_P_CZ1", pca$ind)] <- "EUR"
+reg[grep("EUR_P_CZ2", pca$ind)] <- "EUR"
+reg[grep("EUR_P_FR",  pca$ind)] <- "EUR"
+reg[grep("USA_P_OR",  pca$ind)] <- "USA"
+reg[grep("USA_P_AL1", pca$ind)] <- "USA"
+reg[grep("USA_P_AL2", pca$ind)] <- "USA"
+reg[grep("CHN_P_GU1", pca$ind)] <- "CHN"
+reg[grep("CHN_P_GU2", pca$ind)] <- "CHN"
+reg[grep("CHN_P_GU3", pca$ind)] <- "CHN"
+reg[grep("CHN_P_SH1", pca$ind)] <- "CHN"
+reg[grep("CHN_P_SH2", pca$ind)] <- "CHN"
+reg[grep("USA_P_WI",  pca$ind)] <- "USA"
+reg[grep("USA_P_WA1", pca$ind)] <- "USA"
+reg[grep("USA_P_WA2", pca$ind)] <- "USA"
+reg[grep("COL_H_MD",  pca$ind)] <- "COL"
+reg[grep("USA_H_MO",  pca$ind)] <- "USA"
+reg[grep("USA_H_ID",  pca$ind)] <- "USA"
+reg[grep("UGA_H_KA1", pca$ind)] <- "AFR"
+reg[grep("UGA_H_KA2", pca$ind)] <- "AFR"
+reg[grep("EUR_H_WL1", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL2", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL3", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL4", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL5", pca$ind)] <- "EUR"
+reg[grep("EUR_P_WL6", pca$ind)] <- "EUR"
+reg[grep("AFR_H_GH1", pca$ind)] <- "AFR"
+reg[grep("AFR_H_GH2", pca$ind)] <- "AFR"
+reg[grep("AFR_H_GH3", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ1", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ2", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ3", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ4", pca$ind)] <- "AFR"
+reg[grep("MDG_H_1",   pca$ind)] <- "AFR"
+reg[grep("MDG_H_2",   pca$ind)] <- "AFR"
+reg[grep("MDG_H_3",   pca$ind)] <- "AFR"
+reg[grep("NZL_H",     pca$ind)] <- "NZL"
+reg[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector with sample hosts
+host <- rep(NA, length(pca$ind))
+host[grep("866",       pca$ind)] <- "Mmd"
+host[grep("942",       pca$ind)] <- "Mmd"
+host[grep("EUR_T_866", pca$ind)] <- "Mmd"
+host[grep("EUR_T_942", pca$ind)] <- "Mmd"
+host[grep("EUR_T_900", pca$ind)] <- "Mmm"
+host[grep("CHN_T_GU",  pca$ind)] <- "Mmm"
+host[grep("USA_T_GA",  pca$ind)] <- "Mmd"
+host[grep("EUR_P_CZ2", pca$ind)] <- "Human"
+host[grep("EUR_P_FR",  pca$ind)] <- "Human"
+host[grep("USA_P_OR",  pca$ind)] <- "Human"
+host[grep("USA_P_AL1", pca$ind)] <- "Human"
+host[grep("USA_P_AL2", pca$ind)] <- "Human"
+host[grep("EUR_P_WL6", pca$ind)] <- "Human"
+host[grep("EUR_P_CZ1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU2", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU3", pca$ind)] <- "Cattle"
+host[grep("CHN_P_SH1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_SH2", pca$ind)] <- "Cattle"
+host[grep("USA_P_WI",  pca$ind)] <- "Cattle"
+host[grep("USA_P_WA1", pca$ind)] <- "Cattle"
+host[grep("USA_P_WA2", pca$ind)] <- "Cattle"
+host[grep("COL_H_MD",  pca$ind)] <- "Human"
+host[grep("USA_H_MO",  pca$ind)] <- "Human"
+host[grep("USA_H_ID",  pca$ind)] <- "Human"
+host[grep("UGA_H_KA1", pca$ind)] <- "Human"
+host[grep("UGA_H_KA2", pca$ind)] <- "Human"
+host[grep("EUR_H_WL1", pca$ind)] <- "Human"
+host[grep("EUR_H_WL2", pca$ind)] <- "Human"
+host[grep("EUR_H_WL3", pca$ind)] <- "Human"
+host[grep("EUR_H_WL4", pca$ind)] <- "Human"
+host[grep("EUR_H_WL5", pca$ind)] <- "Human"
+host[grep("AFR_H_GH1", pca$ind)] <- "Human"
+host[grep("AFR_H_GH2", pca$ind)] <- "Human"
+host[grep("AFR_H_GH3", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ1", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ2", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ3", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ4", pca$ind)] <- "Human"
+host[grep("MDG_H_1",   pca$ind)] <- "Human"
+host[grep("MDG_H_2",   pca$ind)] <- "Human"
+host[grep("MDG_H_3",   pca$ind)] <- "Human"
+host[grep("NZL_H",     pca$ind)] <- "Human"
+host[grep("IND_M",     pca$ind)] <- "Human"
+
+
+# make a vector with sample species
+spp <- rep(NA, length(pca$ind))
+spp[grep("866",       pca$ind)] <- "C.tyzzeri"
+spp[grep("942",       pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_866", pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_942", pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_900", pca$ind)] <- "C.tyzzeri"
+spp[grep("CHN_T_GU",  pca$ind)] <- "C.tyzzeri"
+spp[grep("USA_T_GA",  pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_P_CZ2", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_OR",  pca$ind)] <- "C.parvum"
+spp[grep("USA_P_AL1", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_AL2", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_CZ1", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_FR",  pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU1", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU2", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU3", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_SH1", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_SH2", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WI",  pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WA1", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WA2", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_WL6", pca$ind)] <- "C.parvum"
+spp[grep("COL_H_MD",  pca$ind)] <- "C.hominis"
+spp[grep("USA_H_MO",  pca$ind)] <- "C.hominis"
+spp[grep("USA_H_ID",  pca$ind)] <- "C.hominis"
+spp[grep("UGA_H_KA1", pca$ind)] <- "C.hominis"
+spp[grep("UGA_H_KA2", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL1", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL2", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL3", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL4", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL5", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_GH1", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_GH2", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_GH3", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ1", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ2", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ3", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ4", pca$ind)] <- "C.hominis"
+spp[grep("MDG_H_1",   pca$ind)] <- "C.hominis"
+spp[grep("MDG_H_2",   pca$ind)] <- "C.hominis"
+spp[grep("MDG_H_3",   pca$ind)] <- "C.hominis"
+spp[grep("NZL_H",     pca$ind)] <- "C.hominis"
+spp[grep("IND_M",     pca$ind)] <- "C.meleagridis"
+
+
+# make a vector with sample subspecies
+ssp <- rep(NA, length(pca$ind))
+ssp[grep("866",       pca$ind)] <- "IXb"
+ssp[grep("942",       pca$ind)] <- "IXb"
+ssp[grep("EUR_T_866", pca$ind)] <- "IXb"
+ssp[grep("EUR_T_942", pca$ind)] <- "IXb"
+ssp[grep("EUR_T_900", pca$ind)] <- "IXb"
+ssp[grep("CHN_T_GU",  pca$ind)] <- "IXa"
+ssp[grep("USA_T_GA",  pca$ind)] <- "IXb"
+ssp[grep("EUR_P_CZ1", pca$ind)] <- "IIa"
+ssp[grep("USA_P_OR",  pca$ind)] <- "IIc"
+ssp[grep("USA_P_AL1", pca$ind)] <- "IIc"
+ssp[grep("USA_P_AL2", pca$ind)] <- "IId"
+ssp[grep("EUR_P_CZ2", pca$ind)] <- "IIa"
+ssp[grep("EUR_P_FR",  pca$ind)] <- "II"
+ssp[grep("CHN_P_GU1", pca$ind)] <- "IId"
+ssp[grep("CHN_P_GU2", pca$ind)] <- "IId"
+ssp[grep("CHN_P_GU3", pca$ind)] <- "IId"
+ssp[grep("CHN_P_SH1", pca$ind)] <- "IId"
+ssp[grep("CHN_P_SH2", pca$ind)] <- "IId"
+ssp[grep("USA_P_WI",  pca$ind)] <- "IIa"
+ssp[grep("USA_P_WA1", pca$ind)] <- "IIa"
+ssp[grep("USA_P_WA2", pca$ind)] <- "IIa"
+ssp[grep("COL_H_MD",  pca$ind)] <- "Ie"
+ssp[grep("USA_H_MO",  pca$ind)] <- "Ia"
+ssp[grep("USA_H_ID",  pca$ind)] <- "Ib"
+ssp[grep("UGA_H_KA1", pca$ind)] <- "Ib"
+ssp[grep("UGA_H_KA2", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL1", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL2", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL3", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL4", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL5", pca$ind)] <- "Ib"
+ssp[grep("EUR_P_WL6", pca$ind)] <- "IIa"
+ssp[grep("AFR_H_GH1", pca$ind)] <- "Id"
+ssp[grep("AFR_H_GH2", pca$ind)] <- "Ie"
+ssp[grep("AFR_H_GH3", pca$ind)] <- "Ie"
+ssp[grep("AFR_H_TZ1", pca$ind)] <- "Ia"
+ssp[grep("AFR_H_TZ2", pca$ind)] <- "Ib"
+ssp[grep("AFR_H_TZ3", pca$ind)] <- "Id"
+ssp[grep("AFR_H_TZ4", pca$ind)] <- "Ie"
+ssp[grep("MDG_H_1",   pca$ind)] <- "Ia"
+ssp[grep("MDG_H_2",   pca$ind)] <- "Ia"
+ssp[grep("MDG_H_3",   pca$ind)] <- "Ib"
+ssp[grep("NZL_H",     pca$ind)] <- "Ib"
+ssp[grep("IND_M",     pca$ind)] <- "IIIb"
+
+
+# bind the vectors together
+pca_prep <- as_tibble(data.frame(pca, sample, loc, reg, host, spp, ssp))
+
+# prepare data for "principal variance explained" (pve)
+if (length(pca_prep$ind) > 20) {
+  pve_prep <- data.frame(PC = 1:20, pve = eigenval/sum(eigenval)*100)
+} else {
+  pve_prep <- data.frame(PC = 1:length(pca_prep$ind), pve = eigenval/sum(eigenval)*100)
+}
+cumsum(pve_prep$pve)
+
+pca <- pca_prep
+pve <- pve_prep
+
+VAR_EXPLAINED_big <- pve %>% ggplot(aes(PC, pve)) + ggtitle(paste0("Variance explained per PC (", FILE, ")")) + geom_bar(stat = "identity") + ylab("Percentage variance explained") + theme_light() #PCsVarExp
+
+
+SPECIES_big <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = spp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = species") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("#73be73","red", "blue", "orange")) +
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+
+SUBSPECIES_big <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = ssp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = subspecies") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("#425F57", "#749F82", "#A8E890","#CFFF8D", "blue", "#31C6D4", "red", "#CDCD00", "orange")) + 
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+
+SUBSPECIES_PC23_big <- pca %>% ggplot(aes((signif(pve$pve[2], 3)*PC2), 
+                                         (signif(pve$pve[3], 3))*PC3, 
+                                         col = ssp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC2 vs. PC3 (", FILE, ")")) + #, subtitle = "color = subspecies, shape = region") + 
+  coord_equal() + theme_light() + 
+  scale_color_manual(values = c("#425F57", "#749F82", "#A8E890","#CFFF8D", "blue", "#31C6D4", "red", "#CDCD00", "orange")) + 
+  xlab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  ylab(paste0("PC3 (", signif(pve$pve[3], 3), "%)")) + 
+  #geom_label() +
+  theme(legend.position = "right")
+  
+  #theme(legend.position = "none")
+
+VAR_EXPLAINED_big
+SPECIES_big
+SUBSPECIES_big
+SUBSPECIES_PC23_big
+```
+
+
+``` {r vis-on-demand, echo=F, warning=F, message=F}
+# 4T_1M
+VAR_EXPLAINED_smol
+SPECIES_smol
+SUBSPECIES_smol
+SUBSPECIES_PC23_smol
+
+# 4T_8P_1M
+VAR_EXPLAINED_med
+SPECIES_med
+SUBSPECIES_med
+SPECIES_PC23_med
+SUBSPECIES_PC23_med
+
+# 4T_8P_16H_1M
+VAR_EXPLAINED_big
+SPECIES_big
+SUBSPECIES_big
+SUBSPECIES_PC23_big
+```
+
+# 4T_8P_16H_1M
+
+``` {r prep3, echo=F,warning=F,message=F}
+#FILE <- "5T_8P_16H_1M"
+FILE <- "16H"
+
+
+LD=0.4
+#LD="calculated"
+# PREPARE A FILE THAT CONTAINS _C.tyzzeri_ SAMPLES AND OUTGROUP(S)
+
+if (LD==0.4) {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".ld04.eigenval"))
+} else {
+  pca <- read_table(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenvec"), col_names = F)
+  eigenval  <- scan(paste0("/SAN/Ctyzzeri/gap/results/pca/", FILE, ".eigenval"))
+}
+
+pca <- pca[,-1] # eliminate the duplicated first row
+names(pca)[1] <- "ind" # rename the frist column
+names(pca)[2:ncol(pca)] <- paste0("PC", 1:(ncol(pca)-1))
+
+# make a vector of sample names
+sample <- rep(NA, length(pca$ind))
+sample[grep("866",       pca$ind)] <- "866.sdgr"
+sample[grep("900",       pca$ind)] <- "900_ALL"
+sample[grep("942",       pca$ind)] <- "942.sdgr"
+sample[grep("AFR_H_GH1", pca$ind)] <- "AFR_H_GH1"
+sample[grep("AFR_H_GH2", pca$ind)] <- "AFR_H_GH2"
+sample[grep("AFR_H_GH3", pca$ind)] <- "AFR_H_GH3"
+sample[grep("AFR_H_TZ1", pca$ind)] <- "AFR_H_TZ1"
+sample[grep("AFR_H_TZ2", pca$ind)] <- "AFR_H_TZ2"
+sample[grep("AFR_H_TZ3", pca$ind)] <- "AFR_H_TZ3"
+sample[grep("AFR_H_TZ4", pca$ind)] <- "AFR_H_TZ4"
+sample[grep("CHN_P_GU1", pca$ind)] <- "CHN_P_GU1"
+sample[grep("CHN_P_GU2", pca$ind)] <- "CHN_P_GU2"
+sample[grep("CHN_P_GU3", pca$ind)] <- "CHN_P_GU3"
+sample[grep("CHN_P_SH1", pca$ind)] <- "CHN_P_SH1"
+sample[grep("CHN_P_SH2", pca$ind)] <- "CHN_P_SH2"
+sample[grep("CHN_T_GU",  pca$ind)] <- "CHN_T_GU"
+sample[grep("COL_H_MD",  pca$ind)] <- "COL_H_MD"
+sample[grep("EUR_H_WL1", pca$ind)] <- "EUR_H_WL1"
+sample[grep("EUR_H_WL2", pca$ind)] <- "EUR_H_WL2"
+sample[grep("EUR_H_WL3", pca$ind)] <- "EUR_H_WL3"
+sample[grep("EUR_H_WL4", pca$ind)] <- "EUR_H_WL4"
+sample[grep("EUR_H_WL5", pca$ind)] <- "EUR_H_WL5"
+sample[grep("EUR_P_WL6", pca$ind)] <- "EUR_P_WL6"
+sample[grep("EUR_T_866", pca$ind)] <- "EUR_T_866"
+sample[grep("EUR_T_942", pca$ind)] <- "EUR_T_942"
+sample[grep("EUR_T_900", pca$ind)] <- "EUR_T_900"
+sample[grep("EUR_P_CZ1", pca$ind)] <- "EUR_P_CZ1"
+sample[grep("EUR_P_CZ2", pca$ind)] <- "EUR_P_CZ2"
+sample[grep("EUR_P_FR",  pca$ind)] <- "EUR_P_FR"
+sample[grep("MDG_H_1",   pca$ind)] <- "MDG_H_1"
+sample[grep("MDG_H_2",   pca$ind)] <- "MDG_H_2"
+sample[grep("MDG_H_3",   pca$ind)] <- "MDG_H_3"
+sample[grep("NZL_H",     pca$ind)] <- "NZL_H"
+sample[grep("USA_H_MO",  pca$ind)] <- "USA_H_MO"
+sample[grep("USA_H_ID",  pca$ind)] <- "USA_H_ID"
+sample[grep("UGA_H_KA1", pca$ind)] <- "UGA_H_KA1"
+sample[grep("UGA_H_KA2", pca$ind)] <- "UGA_H_KA2"
+sample[grep("USA_P_AL1", pca$ind)] <- "USA_P_AL1"
+sample[grep("USA_P_AL2", pca$ind)] <- "USA_P_AL2"
+sample[grep("USA_P_OR",  pca$ind)] <- "USA_P_OR"
+sample[grep("USA_P_WI",  pca$ind)] <- "USA_P_WI"
+sample[grep("USA_P_WA1", pca$ind)] <- "USA_P_WA1"
+sample[grep("USA_P_WA2", pca$ind)] <- "USA_P_WA2"
+sample[grep("USA_T_GA",  pca$ind)] <- "USA_T_GA"
+sample[grep("IND_M",     pca$ind)] <- "IND_M"
+
+
+# make a vector of sample locations
+loc <- rep(NA, length(pca$ind))
+loc[grep("866",       pca$ind)] <- "GER"
+loc[grep("900",       pca$ind)] <- "GER"
+loc[grep("942",       pca$ind)] <- "GER"
+loc[grep("EUR_T_866", pca$ind)] <- "GER"
+loc[grep("EUR_T_942", pca$ind)] <- "GER"
+loc[grep("EUR_T_900", pca$ind)] <- "GER"
+loc[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+loc[grep("USA_T_GA",  pca$ind)] <- "USA"
+loc[grep("EUR_P_CZ1", pca$ind)] <- "CZE"
+loc[grep("EUR_P_CZ2", pca$ind)] <- "CZE"
+loc[grep("EUR_P_FR",  pca$ind)] <- "FRA"
+loc[grep("USA_P_OR",  pca$ind)] <- "USA"
+loc[grep("USA_P_AL1", pca$ind)] <- "USA"
+loc[grep("USA_P_AL2", pca$ind)] <- "USA"
+loc[grep("CHN_P_GU1", pca$ind)] <- "CHN"
+loc[grep("CHN_P_GU2", pca$ind)] <- "CHN"
+loc[grep("CHN_P_GU3", pca$ind)] <- "CHN"
+loc[grep("CHN_P_SH1", pca$ind)] <- "CHN"
+loc[grep("CHN_P_SH2", pca$ind)] <- "CHN"
+loc[grep("USA_P_WI",  pca$ind)] <- "USA"
+loc[grep("USA_P_WA1", pca$ind)] <- "USA"
+loc[grep("USA_P_WA2", pca$ind)] <- "USA"
+loc[grep("COL_H_MD",  pca$ind)] <- "COL"
+loc[grep("USA_H_MO",  pca$ind)] <- "USA"
+loc[grep("USA_H_ID",  pca$ind)] <- "USA"
+loc[grep("UGA_H_KA1", pca$ind)] <- "UGA"
+loc[grep("UGA_H_KA2", pca$ind)] <- "UGA"
+loc[grep("EUR_H_WL1", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL2", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL3", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL4", pca$ind)] <- "WAL"
+loc[grep("EUR_H_WL5", pca$ind)] <- "WAL"
+loc[grep("EUR_P_WL6", pca$ind)] <- "WAL"
+loc[grep("AFR_H_GH1", pca$ind)] <- "GHA"
+loc[grep("AFR_H_GH2", pca$ind)] <- "GHA"
+loc[grep("AFR_H_GH3", pca$ind)] <- "GHA"
+loc[grep("AFR_H_TZ1", pca$ind)] <- "TZN"
+loc[grep("AFR_H_TZ2", pca$ind)] <- "TZN"
+loc[grep("AFR_H_TZ3", pca$ind)] <- "TZN"
+loc[grep("AFR_H_TZ4", pca$ind)] <- "TZN"
+loc[grep("MDG_H_1",   pca$ind)] <- "MDG"
+loc[grep("MDG_H_2",   pca$ind)] <- "MDG"
+loc[grep("MDG_H_3",   pca$ind)] <- "MDG"
+loc[grep("NZL_H",     pca$ind)] <- "NZL"
+loc[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector of sample regions
+reg <- rep(NA, length(pca$ind))
+reg[grep("866",       pca$ind)] <- "EUR"
+reg[grep("900",       pca$ind)] <- "EUR"
+reg[grep("942",       pca$ind)] <- "EUR"
+reg[grep("EUR_T_866", pca$ind)] <- "EUR"
+reg[grep("EUR_T_942", pca$ind)] <- "EUR"
+reg[grep("EUR_T_900", pca$ind)] <- "EUR"
+reg[grep("CHN_T_GU",  pca$ind)] <- "CHN"
+reg[grep("USA_T_GA",  pca$ind)] <- "USA"
+reg[grep("EUR_P_CZ1", pca$ind)] <- "EUR"
+reg[grep("EUR_P_CZ2", pca$ind)] <- "EUR"
+reg[grep("EUR_P_FR",  pca$ind)] <- "EUR"
+reg[grep("USA_P_OR",  pca$ind)] <- "USA"
+reg[grep("USA_P_AL1", pca$ind)] <- "USA"
+reg[grep("USA_P_AL2", pca$ind)] <- "USA"
+reg[grep("CHN_P_GU1", pca$ind)] <- "CHN"
+reg[grep("CHN_P_GU2", pca$ind)] <- "CHN"
+reg[grep("CHN_P_GU3", pca$ind)] <- "CHN"
+reg[grep("CHN_P_SH1", pca$ind)] <- "CHN"
+reg[grep("CHN_P_SH2", pca$ind)] <- "CHN"
+reg[grep("USA_P_WI",  pca$ind)] <- "USA"
+reg[grep("USA_P_WA1", pca$ind)] <- "USA"
+reg[grep("USA_P_WA2", pca$ind)] <- "USA"
+reg[grep("COL_H_MD",  pca$ind)] <- "COL"
+reg[grep("USA_H_MO",  pca$ind)] <- "USA"
+reg[grep("USA_H_ID",  pca$ind)] <- "USA"
+reg[grep("UGA_H_KA1", pca$ind)] <- "AFR"
+reg[grep("UGA_H_KA2", pca$ind)] <- "AFR"
+reg[grep("EUR_H_WL1", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL2", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL3", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL4", pca$ind)] <- "EUR"
+reg[grep("EUR_H_WL5", pca$ind)] <- "EUR"
+reg[grep("EUR_P_WL6", pca$ind)] <- "EUR"
+reg[grep("AFR_H_GH1", pca$ind)] <- "AFR"
+reg[grep("AFR_H_GH2", pca$ind)] <- "AFR"
+reg[grep("AFR_H_GH3", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ1", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ2", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ3", pca$ind)] <- "AFR"
+reg[grep("AFR_H_TZ4", pca$ind)] <- "AFR"
+reg[grep("MDG_H_1",   pca$ind)] <- "AFR"
+reg[grep("MDG_H_2",   pca$ind)] <- "AFR"
+reg[grep("MDG_H_3",   pca$ind)] <- "AFR"
+reg[grep("NZL_H",     pca$ind)] <- "NZL"
+reg[grep("IND_M",     pca$ind)] <- "IND"
+
+# make a vector with sample hosts
+host <- rep(NA, length(pca$ind))
+host[grep("866",       pca$ind)] <- "Mmd"
+host[grep("900",       pca$ind)] <- "Mmm"
+host[grep("942",       pca$ind)] <- "Mmd"
+host[grep("EUR_T_866", pca$ind)] <- "Mmd"
+host[grep("EUR_T_942", pca$ind)] <- "Mmd"
+host[grep("EUR_T_900", pca$ind)] <- "Mmm"
+host[grep("CHN_T_GU",  pca$ind)] <- "Mmm"
+host[grep("USA_T_GA",  pca$ind)] <- "Mmd"
+host[grep("EUR_P_CZ2", pca$ind)] <- "Human"
+host[grep("EUR_P_FR",  pca$ind)] <- "Human"
+host[grep("USA_P_OR",  pca$ind)] <- "Human"
+host[grep("USA_P_AL1", pca$ind)] <- "Human"
+host[grep("USA_P_AL2", pca$ind)] <- "Human"
+host[grep("EUR_P_WL6", pca$ind)] <- "Human"
+host[grep("EUR_P_CZ1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU2", pca$ind)] <- "Cattle"
+host[grep("CHN_P_GU3", pca$ind)] <- "Cattle"
+host[grep("CHN_P_SH1", pca$ind)] <- "Cattle"
+host[grep("CHN_P_SH2", pca$ind)] <- "Cattle"
+host[grep("USA_P_WI",  pca$ind)] <- "Cattle"
+host[grep("USA_P_WA1", pca$ind)] <- "Cattle"
+host[grep("USA_P_WA2", pca$ind)] <- "Cattle"
+host[grep("COL_H_MD",  pca$ind)] <- "Human"
+host[grep("USA_H_MO",  pca$ind)] <- "Human"
+host[grep("USA_H_ID",  pca$ind)] <- "Human"
+host[grep("UGA_H_KA1", pca$ind)] <- "Human"
+host[grep("UGA_H_KA2", pca$ind)] <- "Human"
+host[grep("EUR_H_WL1", pca$ind)] <- "Human"
+host[grep("EUR_H_WL2", pca$ind)] <- "Human"
+host[grep("EUR_H_WL3", pca$ind)] <- "Human"
+host[grep("EUR_H_WL4", pca$ind)] <- "Human"
+host[grep("EUR_H_WL5", pca$ind)] <- "Human"
+host[grep("AFR_H_GH1", pca$ind)] <- "Human"
+host[grep("AFR_H_GH2", pca$ind)] <- "Human"
+host[grep("AFR_H_GH3", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ1", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ2", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ3", pca$ind)] <- "Human"
+host[grep("AFR_H_TZ4", pca$ind)] <- "Human"
+host[grep("MDG_H_1",   pca$ind)] <- "Human"
+host[grep("MDG_H_2",   pca$ind)] <- "Human"
+host[grep("MDG_H_3",   pca$ind)] <- "Human"
+host[grep("NZL_H",     pca$ind)] <- "Human"
+host[grep("IND_M",     pca$ind)] <- "Human"
+
+
+# make a vector with sample species
+spp <- rep(NA, length(pca$ind))
+spp[grep("866",       pca$ind)] <- "C.tyzzeri"
+spp[grep("900",       pca$ind)] <- "C.tyzzeri"
+spp[grep("942",       pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_866", pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_942", pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_T_900", pca$ind)] <- "C.tyzzeri"
+spp[grep("CHN_T_GU",  pca$ind)] <- "C.tyzzeri"
+spp[grep("USA_T_GA",  pca$ind)] <- "C.tyzzeri"
+spp[grep("EUR_P_CZ2", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_OR",  pca$ind)] <- "C.parvum"
+spp[grep("USA_P_AL1", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_AL2", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_CZ1", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_FR",  pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU1", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU2", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_GU3", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_SH1", pca$ind)] <- "C.parvum"
+spp[grep("CHN_P_SH2", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WI",  pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WA1", pca$ind)] <- "C.parvum"
+spp[grep("USA_P_WA2", pca$ind)] <- "C.parvum"
+spp[grep("EUR_P_WL6", pca$ind)] <- "C.parvum"
+spp[grep("COL_H_MD",  pca$ind)] <- "C.hominis"
+spp[grep("USA_H_MO",  pca$ind)] <- "C.hominis"
+spp[grep("USA_H_ID",  pca$ind)] <- "C.hominis"
+spp[grep("UGA_H_KA1", pca$ind)] <- "C.hominis"
+spp[grep("UGA_H_KA2", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL1", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL2", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL3", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL4", pca$ind)] <- "C.hominis"
+spp[grep("EUR_H_WL5", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_GH1", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_GH2", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_GH3", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ1", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ2", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ3", pca$ind)] <- "C.hominis"
+spp[grep("AFR_H_TZ4", pca$ind)] <- "C.hominis"
+spp[grep("MDG_H_1",   pca$ind)] <- "C.hominis"
+spp[grep("MDG_H_2",   pca$ind)] <- "C.hominis"
+spp[grep("MDG_H_3",   pca$ind)] <- "C.hominis"
+spp[grep("NZL_H",     pca$ind)] <- "C.hominis"
+spp[grep("IND_M",     pca$ind)] <- "C.meleagridis"
+
+
+# make a vector with sample subspecies
+ssp <- rep(NA, length(pca$ind))
+ssp[grep("866",       pca$ind)] <- "IXb"
+ssp[grep("900",       pca$ind)] <- "IXb"
+ssp[grep("942",       pca$ind)] <- "IXb"
+ssp[grep("EUR_T_866", pca$ind)] <- "IXb"
+ssp[grep("EUR_T_942", pca$ind)] <- "IXb"
+ssp[grep("EUR_T_900", pca$ind)] <- "IXb"
+ssp[grep("CHN_T_GU",  pca$ind)] <- "IXa"
+ssp[grep("USA_T_GA",  pca$ind)] <- "IXb"
+ssp[grep("EUR_P_CZ1", pca$ind)] <- "IIa"
+ssp[grep("USA_P_OR",  pca$ind)] <- "IIc"
+ssp[grep("USA_P_AL1", pca$ind)] <- "IIc"
+ssp[grep("USA_P_AL2", pca$ind)] <- "IId"
+ssp[grep("EUR_P_CZ2", pca$ind)] <- "IIa"
+ssp[grep("EUR_P_FR",  pca$ind)] <- "II"
+ssp[grep("CHN_P_GU1", pca$ind)] <- "IId"
+ssp[grep("CHN_P_GU2", pca$ind)] <- "IId"
+ssp[grep("CHN_P_GU3", pca$ind)] <- "IId"
+ssp[grep("CHN_P_SH1", pca$ind)] <- "IId"
+ssp[grep("CHN_P_SH2", pca$ind)] <- "IId"
+ssp[grep("USA_P_WI",  pca$ind)] <- "IIa"
+ssp[grep("USA_P_WA1", pca$ind)] <- "IIa"
+ssp[grep("USA_P_WA2", pca$ind)] <- "IIa"
+ssp[grep("COL_H_MD",  pca$ind)] <- "Ie"
+ssp[grep("USA_H_MO",  pca$ind)] <- "Ia"
+ssp[grep("USA_H_ID",  pca$ind)] <- "Ib"
+ssp[grep("UGA_H_KA1", pca$ind)] <- "Ib"
+ssp[grep("UGA_H_KA2", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL1", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL2", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL3", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL4", pca$ind)] <- "Ib"
+ssp[grep("EUR_H_WL5", pca$ind)] <- "Ib"
+ssp[grep("EUR_P_WL6", pca$ind)] <- "IIa"
+ssp[grep("AFR_H_GH1", pca$ind)] <- "Id"
+ssp[grep("AFR_H_GH2", pca$ind)] <- "Ie"
+ssp[grep("AFR_H_GH3", pca$ind)] <- "Ie"
+ssp[grep("AFR_H_TZ1", pca$ind)] <- "Ia"
+ssp[grep("AFR_H_TZ2", pca$ind)] <- "Ib"
+ssp[grep("AFR_H_TZ3", pca$ind)] <- "Id"
+ssp[grep("AFR_H_TZ4", pca$ind)] <- "Ie"
+ssp[grep("MDG_H_1",   pca$ind)] <- "Ia"
+ssp[grep("MDG_H_2",   pca$ind)] <- "Ia"
+ssp[grep("MDG_H_3",   pca$ind)] <- "Ib"
+ssp[grep("NZL_H",     pca$ind)] <- "Ib"
+ssp[grep("IND_M",     pca$ind)] <- "IIIb"
+
+
+# bind the vectors together
+pca_prep <- as_tibble(data.frame(pca, sample, loc, reg, host, spp, ssp))
+
+# prepare data for "principal variance explained" (pve)
+if (length(pca_prep$ind) > 20) {
+  pve_prep <- data.frame(PC = 1:20, pve = eigenval/sum(eigenval)*100)
+} else {
+  pve_prep <- data.frame(PC = 1:length(pca_prep$ind), pve = eigenval/sum(eigenval)*100)
+}
+cumsum(pve_prep$pve)
+
+pca <- pca_prep
+pve <- pve_prep
+
+VAR_EXPLAINED_big <- pve %>% ggplot(aes(PC, pve)) + ggtitle(paste0("Variance explained per PC (", FILE, ")")) + geom_bar(stat = "identity") + ylab("Percentage variance explained") + theme_light() #PCsVarExp
+
+
+SPECIES_big <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = spp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = species") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  #geom_label() +
+  scale_color_manual(values = c("#73be73","red", "blue", "orange")) +
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+
+SUBSPECIES_big <- pca %>% ggplot(aes((signif(pve$pve[1], 3)*PC1), 
+                                         (signif(pve$pve[2], 3))*PC2, 
+                                         col = ssp, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC1 vs. PC2 (", FILE, ")"), 
+          subtitle = "color = subspecies") + #, shape = region") + 
+  coord_equal() + theme_light() + 
+  geom_label() +
+  scale_color_manual(values = c("#425F57", "#749F82", "#A8E890","#CFFF8D", "blue", "#31C6D4", "red", "#CDCD00", "orange")) + 
+  xlab(paste0("PC1 (", signif(pve$pve[1], 3), "%)")) + 
+  ylab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  theme(legend.position = "right")
+  #theme(legend.position = "none")
+
+
+SUBSPECIES_PC23_big <- pca %>% ggplot(aes((signif(pve$pve[2], 3)*PC2), 
+                                         (signif(pve$pve[3], 3))*PC3, 
+                                         col = reg, 
+                                         #shape = reg, 
+                                         label = sample)) + geom_point(size = 3) + 
+  ggtitle(paste0("PC2 vs. PC3 (", FILE, ")")) + #, subtitle = "color = subspecies, shape = region") + 
+  coord_equal() + theme_light() + 
+  scale_color_manual(values = c("#425F57", "#749F82", "#A8E890","#CFFF8D", "blue", "#31C6D4", "red", "#CDCD00", "orange")) + 
+  xlab(paste0("PC2 (", signif(pve$pve[2], 3), "%)")) + 
+  ylab(paste0("PC3 (", signif(pve$pve[3], 3), "%)")) + 
+  geom_label() +
+  theme(legend.position = "right")
+  
+  #theme(legend.position = "none")
+
+VAR_EXPLAINED_big
+SPECIES_big
+SUBSPECIES_big
+SUBSPECIES_PC23_big
+```
