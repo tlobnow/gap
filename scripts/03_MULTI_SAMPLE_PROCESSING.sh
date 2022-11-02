@@ -8,7 +8,20 @@
 #IND=7T
 #IND=6T_9P_19H
 #IND=6T_1H
-IND=6T_1P_1H
+#IND=6T_1P_1H
+#IND=6T_8P_15H
+#IND=6T_8P
+#IND=2T
+#IND=4T_8P_15H
+#IND=4T_8P
+IND=4T
+#IND=4T_8P_15H
+#IND=4T_8P
+#IND=4T_1M
+#IND=4T_8P_1M
+#IND=4T_8P_16H_1M
+#IND=5T_8P_16H_1M
+#IND=16H
 
 REF=/SAN/Ctyzzeri/gap/resources/CryptoDB-57_CtyzzeriUGA55_Genome.fasta
 CGVCF=/SAN/Ctyzzeri/gap/results/gvcfCombined/${IND}.g.vcf
@@ -18,32 +31,27 @@ LIST=/SAN/Ctyzzeri/gap/results/vcfFilteredLists/${IND}.filteredList.vcf
 FVCF=/SAN/Ctyzzeri/gap/results/vcfFiltered/${IND}.filtered.vcf
 STATS=/SAN/Ctyzzeri/gap/results/stats/${IND}
 FSTATS=/SAN/Ctyzzeri/gap/results/stats/${IND}.filtered
-PRUNED=/SAN/Ctyzzeri/gap/results/pca/${IND}
-EXTRACT=/SAN/Ctyzzeri/gap/results/pca/${IND}.prune.in
-PCA=/SAN/Ctyzzeri/gap/results/pca/${IND}
-PHY=/SAN/Ctyzzeri/gap/results/phylip
 
+#PRUNED=/SAN/Ctyzzeri/gap/results/pca/${IND}
+PRUNED2=/SAN/Ctyzzeri/gap/results/pca2/${IND}
+#EXTRACT=/SAN/Ctyzzeri/gap/results/pca/${IND}.prune.in
+EXTRACT2=/SAN/Ctyzzeri/gap/results/pca2/${IND}.prune.in
+#PCA=/SAN/Ctyzzeri/gap/results/pca/${IND}
+PCA=/SAN/Ctyzzeri/gap/results/pca2/${IND}
+
+PHY=/SAN/Ctyzzeri/gap/results/phylip
+LD=/SAN/Ctyzzeri/gap/results/ld/${IND}
 
 # COMBINE GVCF ###################################################################################################################
 echo "Combine GVCF of $IND"
 java -jar /home/finn/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar CombineGVCFs \
  -R $REF -O $CGVCF \
- -V ${LOC}866.sdgr.g.vcf \
- -V ${LOC}942.sdgr.g.vcf \
- -V ${LOC}EUR_T_866.g.vcf \
- -V ${LOC}EUR_T_942.g.vcf \
  -V ${LOC}USA_T_GA.g.vcf \
  -V ${LOC}CHN_T_GU.g.vcf \
- -V ${LOC}EUR_P_WL6.g.vcf \
- -V ${LOC}USA_H_ID.g.vcf &&
+ -V ${LOC}866.sdgr.g.vcf \
+ -V ${LOC}942.sdgr.g.vcf &&
 
-# -V ${LOC}CHN_P_GU1.g.vcf \
-# -V ${LOC}CHN_P_GU2.g.vcf \
-# -V ${LOC}CHN_P_GU3.g.vcf \
-# -V ${LOC}CHN_P_SH2.g.vcf \
-# -V ${LOC}EUR_P_CZ1.g.vcf \
-# -V ${LOC}EUR_P_CZ2.g.vcf \
-# -V ${LOC}USA_P_WI.g.vcf \
+# -V ${LOC}USA_H_ID.g.vcf \
 # -V ${LOC}MDG_H_1.g.vcf \
 # -V ${LOC}MDG_H_2.g.vcf \
 # -V ${LOC}MDG_H_3.g.vcf \
@@ -58,8 +66,38 @@ java -jar /home/finn/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar CombineGVCFs \
 # -V ${LOC}EUR_H_WL3.g.vcf \
 # -V ${LOC}UGA_H_KA1.g.vcf \
 # -V ${LOC}UGA_H_KA2.g.vcf \
-# -V ${LOC}NZL_H.g.vcf \
+# -V ${LOC}NZL_H.g.vcf &&
 
+# -V ${LOC}USA_T_GA.g.vcf \
+# -V ${LOC}CHN_T_GU.g.vcf \
+# -V ${LOC}866.sdgr.g.vcf \
+# -V ${LOC}942.sdgr.g.vcf \
+# -V ${LOC}IND_M.g.vcf \
+# -V ${LOC}900_ALL.g.vcf \
+# -V ${LOC}EUR_P_WL6.g.vcf \
+# -V ${LOC}CHN_P_GU1.g.vcf \
+# -V ${LOC}CHN_P_GU2.g.vcf \
+# -V ${LOC}CHN_P_GU3.g.vcf \
+# -V ${LOC}CHN_P_SH2.g.vcf \
+# -V ${LOC}EUR_P_CZ1.g.vcf \
+# -V ${LOC}EUR_P_CZ2.g.vcf \
+# -V ${LOC}USA_P_WI.g.vcf \
+# -V ${LOC}USA_H_ID.g.vcf \
+# -V ${LOC}MDG_H_1.g.vcf \
+# -V ${LOC}MDG_H_2.g.vcf \
+# -V ${LOC}MDG_H_3.g.vcf \
+# -V ${LOC}AFR_H_GH1.g.vcf \
+# -V ${LOC}AFR_H_GH2.g.vcf \
+# -V ${LOC}AFR_H_TZ1.g.vcf \
+# -V ${LOC}AFR_H_TZ2.g.vcf \
+# -V ${LOC}AFR_H_TZ3.g.vcf \
+# -V ${LOC}AFR_H_TZ4.g.vcf \
+# -V ${LOC}EUR_H_WL1.g.vcf \
+# -V ${LOC}EUR_H_WL2.g.vcf \
+# -V ${LOC}EUR_H_WL3.g.vcf \
+# -V ${LOC}UGA_H_KA1.g.vcf \
+# -V ${LOC}UGA_H_KA2.g.vcf \
+# -V ${LOC}NZL_H.g.vcf &&
 
 # DO NOT USE (NOT IDEAL DOWNSTREAM)
 # -V ${LOC}COL_H_MD.g.vcf \
@@ -75,6 +113,11 @@ java -jar /home/finn/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar CombineGVCFs \
 # -V ${LOC}USA_H_MO.g.vcf \
 # -V ${LOC}AFR_H_GH3.g.vcf \
 # -V ${LOC}USA_P_WA1.g.vcf \
+
+# -V ${LOC}EUR_T_866.g.vcf \
+# -V ${LOC}EUR_T_942.g.vcf \
+# -V ${LOC}866.sdgr.g.vcf \
+# -V ${LOC}942.sdgr.g.vcf \
 
 
 
@@ -133,20 +176,6 @@ vcftools --gzvcf $FVCF --site-quality --out $FSTATS &&
 vcftools --gzvcf $FVCF --missing-indv --out $FSTATS &&
 # Calculate the propoortion of missing data per site
 vcftools --gzvcf $FVCF --missing-site --out $FSTATS
-
-# PRUNE ##########################################################################################################################
-~/plink-1.9/plink \
- --vcf $FVCF --double-id --allow-extra-chr \
- --set-missing-var-ids @:#\$1,\$2  \
- --indep-pairwise 50 10 0.1 --out $PRUNED &&
-
-# PCA maybe include --mind #######################################################################################################
-~/plink-1.9/plink \
- --vcf $FVCF --double-id --allow-extra-chr \
- --mind 0.9 \
- --set-missing-var-ids @:#\$1,\$2 \
- --extract $EXTRACT \
- --make-bed --pca --out $PCA &&
 
 # VCF2PHYLIP #####################################################################################################################
 ~/vcf2phylip/vcf2phylip.py -i $FVCF --output-folder $PHY

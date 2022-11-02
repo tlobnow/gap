@@ -1,0 +1,183 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     Starting SMS v2.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Input alignment    : 6t_8p_filtered_min4_phy
+Data type          : DNA
+Number of taxa     : 14
+Number of sites    : 201253
+Number of branches : 25
+Criterion          : BIC
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1 : Set a fixed topology
+	BIC=1456062.95708
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2 : Select the best decoration
+	BIC=1455964.30611	decoration : ''
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3 : Select the best matrix
+	BIC=1455964.30611	matrix : 'GTR'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 4 : Select the best final decoration
+	BIC=1455964.30611	decoration : ''
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Selected model				: GTR 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Substitution model			: GTR
+Equilibrium frequencies			: ML optimized
+Proportion of invariable sites		: fixed (0.0)
+Number of substitution rate categories	: 1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Suggested citations:
+SMS
+ Vincent Lefort, Jean-Emmanuel Longueville, Olivier Gascuel.
+ "SMS: Smart Model Selection in PhyML."
+ Molecular Biology and Evolution, msx149, 2017.
+PhyML
+ S. Guindon, JF. Dufayard,  V. Lefort,  M. Anisimova,
+ W. Hordijk, O. Gascuel
+ "New algorithms and methods to estimate maximum-likelihood
+ phylogenies: assessing the performance of PhyML 3.0."
+ Systematic Biology. 2010. 59(3):307-321.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Additional step : Infer tree with model : 'GTR +F'
+
+
+. Command line: /data/http/www/binaries/phyml/../sms/sms/phyml-src/phyml -i /data/http/www/exec/20221012-213843_Vx19/6t_8p_filtered_min4_phy -d nt -o tlr -m GTR -c 1 -v 0 -f 0.26734,0.23196,0.23407,0.26663 -b 1000 --leave_duplicates --no_memory_check --print_trace --json_trace 
+
+
+
+
+
+  ////////////////////////////////////.\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.//////////////////////////////////////////
+
+        . Sequence filename:				 6t_8p_filtered_min4_phy
+        . Data type:					 dna
+        . Alphabet size:				 4
+        . Sequence format:				 interleaved
+        . Number of data sets:				 1
+        . Nb of bootstrapped data sets:			 1000
+        . Compute approximate likelihood ratio test:	 no
+        . Model name:					 GTR
+        . Proportion of invariable sites:		 0.000000
+        . RAS model:					 discrete Gamma
+        . Number of subst. rate catgs:			 1
+        . Nucleotide equilibrium frequencies:		 user-defined
+        . Optimise tree topology:			 yes
+        . Starting tree:				 BioNJ
+        . Add random input tree:			 no
+        . Optimise branch lengths:			 yes
+        . Minimum length of an edge:			 1e-08
+        . Optimise substitution model parameters:	 yes
+        . Run ID:					 none
+        . Random seed:					 1665603628
+        . Subtree patterns aliasing:			 no
+        . Version:					 3.3.20220408
+        . Byte alignment:				 32
+        . AVX enabled:					 yes
+        . SSE enabled:					 yes
+
+  ////////////////////////////////////.\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.//////////////////////////////////////////
+
+
+
+. 6978 patterns found (out of a total of 201253 sites). 
+
+. 87 sites without polymorphism (0.04%).
+
+
+. Computing pairwise distances...
+
+. Building BioNJ tree...
+
+. This analysis requires at least 21 MB of memory space.
+
+
+. Score of initial tree: -756959.61
+
+. Starting first round of SPRs...
+
+	       5s |   1 | lnL=   -727836.1 | depth=    0/   40 | improvements=   1 | delta_lnL=    0.0/ 1000.0  
+
+. Second round of optimization...
+
+	       6s |   2 | lnL=   -728007.5 | depth=    1/   36 | improvements=   4 | delta_lnL=    0.0/ 1000.0  
+
+. Third round of optimization...
+
+	       8s |   3 | lnL=   -727779.6 | depth=    1/   20 | improvements=   3 | delta_lnL=    0.0/ 1000.0 | triple moves=   5  
+	      11s |   4 | lnL=   -727771.6 | depth=    1/   16 | improvements=   2 | delta_lnL=    0.0/  100.0 | triple moves=   5  
+	      16s |   5 | lnL=   -727765.1 | depth=    0/   12 | improvements=   0 | delta_lnL=    0.0/  100.0 | triple moves=   5  
+
+. Final optimisation steps...
+
+
+. Log likelihood of the current tree: -727762.332477639429271221161.
+
+. Launch bootstrap analysis on the most likely tree...
+
+. Non parametric bootstrap analysis 
+
+  [....................]   20/1000
+  [....................]   40/1000
+  [....................]   60/1000
+  [....................]   80/1000
+  [....................]  100/1000
+  [....................]  120/1000
+  [....................]  140/1000
+  [....................]  160/1000
+  [....................]  180/1000
+  [....................]  200/1000
+  [....................]  220/1000
+  [....................]  240/1000
+  [....................]  260/1000
+  [....................]  280/1000
+  [....................]  300/1000
+  [....................]  320/1000
+  [....................]  340/1000
+  [....................]  360/1000
+  [....................]  380/1000
+  [....................]  400/1000
+  [....................]  420/1000
+  [....................]  440/1000
+  [....................]  460/1000
+  [....................]  480/1000
+  [....................]  500/1000
+  [....................]  520/1000
+  [....................]  540/1000
+  [....................]  560/1000
+  [....................]  580/1000
+  [....................]  600/1000
+  [....................]  620/1000
+  [....................]  640/1000
+  [....................]  660/1000
+  [....................]  680/1000
+  [....................]  700/1000
+  [....................]  720/1000
+  [....................]  740/1000
+  [....................]  760/1000
+  [....................]  780/1000
+  [....................]  800/1000
+  [....................]  820/1000
+  [....................]  840/1000
+  [....................]  860/1000
+  [....................]  880/1000
+  [....................]  900/1000
+  [....................]  920/1000
+  [....................]  940/1000
+  [....................]  960/1000
+  [....................]  980/1000
+  [....................] 1000/1000
+  
+
+. Completed the bootstrap analysis succesfully.
+
+. Printing the most likely tree in file '6t_8p_filtered_min4_phy_phyml_tree.txt'.
+
+. Time used 5h34m14s
+
+oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo

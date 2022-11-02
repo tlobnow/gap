@@ -3,7 +3,9 @@
 #for i in /SAN/Ctyzzeri/gap/results/bamMarkDup/*.bai; do echo $(basename -a -s .rmd.bam.bai $i); done > /SAN/Ctyzzeri/gap/scripts/lists/bam_inds
 #parallel 'sh 02_SINGLE_SAMPLE_PROCESSING.sh {}' :::: /SAN/Ctyzzeri/gap/scripts/lists/bam_inds
 
-IND=$1
+#IND=$1
+#IND=IND_M
+IND=900_ALL
 
 REF=/SAN/Ctyzzeri/gap/resources/CryptoDB-57_CtyzzeriUGA55_Genome.fasta
 BAM=/SAN/Ctyzzeri/gap/results/bamMarkDup/${IND}.rmd.bam
