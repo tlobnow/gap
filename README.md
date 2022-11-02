@@ -50,41 +50,37 @@ mkdir -p results/{bam,bamFixed,bamMarkDup,circos/{cov,variants},csv,fasta,figure
 
 - PROVIDE a file name for the combined VCF output file and select gvcf files of samples you wish to include in the combined file (do not hash out lines, command must be sequential)
 
+- PHYLIP: Additionally to PCA preparation, the combined VCF is used to create a phylip file for tree-building
+
+	- The Online-Tool can be used for automatic model selection, bootstrap analysis can be added in settings, see http://www.atgc-montpellier.fr/phyml/
+
+- otherwise go to 05_MAKE_ML_TREE.sh --> this can do the calculation on big sets for 1000 bootstrap replicates as well. You can still upload the generated tree to the online tool for easy visualization.
+
+
+    **X GVCF files -> combined GVCF -> genotyped GVCF -> unfiltered VCF stats -> filter VCF -> filtered VCF stats -> PHYLIP**
+
+
+### 04_ld2pca.sh NOTES #################################################################################################################################
+
+- PROVIDE a file name on which you would like perform ld calculation and PCA (plink-based)
+
+- can also be done using parallel if you provide a list of file names for all.
+
+- LD-CALC: can take pretty long. you can also hash out this part and use a standard LD of 0.4 (should provide a good basis)
+
 - PRUNING: Plink is used to remove linkage above linkage above an r2 higher than 0.1. 
 
 - PCA: Remaining SNPs are extracted and used to calculate eigenvectors and eigenvalues for the PCA.
+
 	- Eigenvectors and eigenvalues are loaded in R and visualized using the ggplot2 package (v3.3.6).
 
-- PHYLIP: Additionally to PCA preparation, the combined VCF is used to create a phylip file for tree-building
-	- The Online-Tool can be used for automatic model selection, bootstrap analysis can be added in settings, see http://www.atgc-montpellier.fr/phyml/
+
+    ** (LD Calculation or LD = 0.4) -> Plink-Pruning -> Plink-PCA **
+    
 
 
+### 06_fa2phy.sh NOTES #################################################################################################################################
 
-    **X GVCF files -> combined GVCF -> genotyped GVCF -> unfiltered VCF stats -> filter VCF -> filtered VCF stats -> prune VCF -> PCA -> PHYLIP**
+This script is part of the */r_scripts/ConcatAlign.R* script that concatenates fasta files of one sample file. The fa2phy script is executed as part of the ConcatAlign script using a system command (so the path has to be changed) and turns your concatenated fasta files into phylip format.
 
-### MAKE_CIRCOS.sh NOTES ################################################################################################################################################
-
-
-- Creates a bed file in your resources folder that is separated into 1k windows
-- Creates a table with variants per sample
-- calculate coverage (bam files should be indexed (samtools index))
-
-    **BED -> BED1K -> Variants -> Coverage**
-
-# CONTINUED: PRIMER DESIGN USING DECIPHER (R)
-
-Just as a quick heads up: The actual primer design was performed in R. The GAP-Processing was utilized as pre-work to facilitate the primer design in combination with multiple sequence alignment (MSA) in R.
-
-For the purpose of designing, three scripts were used to facilitate the design:
-
-### 02A_SignatureDesign_4LOOP.R ##########################################################################################################################################
-
-
-
-
-### 02B_VisualizeCandidatePairs.R ########################################################################################################################################
-
-
-
-
-
+- PROVIDE a file name that is consistent with the file name in the ConcatAlign script. (it will prompt you to check that, but just fyi)
